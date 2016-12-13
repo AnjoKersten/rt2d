@@ -188,6 +188,8 @@ add_executable(start
 	start/myentity.h
 	start/myscene.cpp
 	start/myscene.h
+	start/player.cpp
+	start/player.h
 )
 target_link_libraries(start
 	${ALL_LIBS}

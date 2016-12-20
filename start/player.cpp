@@ -8,7 +8,7 @@ Player::Player() : Entity()
 
 
 	velocity = Vector2();
-	gravity = 600;
+	gravity = 1000;
 	
 }
 

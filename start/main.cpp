@@ -1,17 +1,15 @@
 /**
- * Copyright 2015 Your Name <you@yourhost.com>
+ * Copyright 2016 Anjo Kersten <anjokersten@gmail.com>
  *
- * @brief Description of My Awesome Game.
+ * @brief Description of Friendly Fire.
  *
  * @file main.cpp
  *
- * @mainpage My Awesome Game
+ * @mainpage Friendly Fire
  *
  * @section intro Introduction
  *
- * Detailed description of My Awesome Game.
- *
- * There's even a second paragraph.
+ * Detailed description of Friendly Fire.
  */
 #include <rt2d/core.h>
 

@@ -51,6 +51,7 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/external/glm-0.9.7.0/
 	${CMAKE_SOURCE_DIR}/external/glew-1.9.0/include/
 	${CMAKE_SOURCE_DIR}/external/rs232/
+	${CMAKE_SOURCE_DIR}/external/Box2D/
 	${CMAKE_SOURCE_DIR}/rt2d/
 	${CMAKE_SOURCE_DIR}/.
 )
@@ -59,6 +60,7 @@ link_directories(
 	${CMAKE_SOURCE_DIR}/external/glfw-3.0.3/src/
 	${CMAKE_SOURCE_DIR}/external/glew-1.9.0/
 	${CMAKE_SOURCE_DIR}/external/rs232
+	${CMAKE_SOURCE_DIR}/external/Box2D
 	${CMAKE_SOURCE_DIR}/external/
 	${CMAKE_SOURCE_DIR}/rt2d
 )
@@ -69,6 +71,7 @@ set(ALL_LIBS
 	rt2d
 	GLFW_303
 	GLEW_190
+	Box2D
 )
 
 add_definitions(
@@ -190,8 +193,13 @@ add_executable(start
 	start/myscene.h
 	start/player.cpp
 	start/player.h
+	start/background.cpp
+	start/background.h
+	start/bullet.cpp
+	start/bullet.h
 )
 target_link_libraries(start
+	Box2D
 	${ALL_LIBS}
 )
 # Copy assets to the build directory

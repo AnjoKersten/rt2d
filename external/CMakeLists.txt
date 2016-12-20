@@ -11,6 +11,7 @@ add_definitions(
 	-D_CRT_SECURE_NO_WARNINGS
 )
 
+
 ### GLFW ###
 
 add_subdirectory (glfw-3.0.3)
@@ -65,3 +66,23 @@ add_library( rs232 STATIC
 	rs232/rs232.c
 	rs232/rs232.h
 )
+
+### BOX2D ###
+if(UNIX)
+    set(BOX2D_INSTALL_BY_DEFAULT ON)
+else(UNIX)
+    set(BOX2D_INSTALL_BY_DEFAULT OFF)
+endif(UNIX)
+ 
+option(BOX2D_INSTALL "Install Box2D libs, includes, and CMake scripts" ${BOX2D_INSTALL_BY_DEFAULT})
+option(BOX2D_INSTALL_DOC "Install Box2D documentation" OFF)
+option(BOX2D_BUILD_SHARED "Build Box2D shared libraries" OFF)
+option(BOX2D_BUILD_STATIC "Build Box2D static libraries" ON)
+option(BOX2D_BUILD_EXAMPLES "Build Box2D examples" ON)
+ 
+set(BOX2D_VERSION 2.3.2)
+set(LIB_INSTALL_DIR lib${LIB_SUFFIX})
+ 
+# The Box2D library.
+add_subdirectory(Box2D)
+

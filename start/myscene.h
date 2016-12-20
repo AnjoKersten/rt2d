@@ -1,18 +1,14 @@
-/**
- * Copyright 2015 Your Name <you@yourhost.com>
- *
- * @file myscene.h
- *
- * @brief description of MyScene behavior.
- */
 
 #ifndef MYSCENE_H
 #define MYSCENE_H
 
-#include <rt2d/scene.h>
+#include <vector>
 
+#include <rt2d/scene.h>
 #include "myentity.h"
 #include "player.h"
+#include "background.h"
+#include "bullet.h"
 
 /// @brief The MyScene class is the Scene implementation.
 class MyScene : public Scene
@@ -29,15 +25,30 @@ public:
 	virtual void update(float deltaTime);
 
 private:
-	/// @brief the rotating square in the middle of the screen
-	//MyEntity* myentity;
-	/// @brief a Timer to rotate the color every n seconds
+
+	void PlayerFireBullet();
+	void Player2FireBullet();
+
+	/// @brief t is a Timer
 	Timer t;
+	
+	int groundLevel;
+
+	float player_offset;
+	float player2_offset;
+	
+	//Background* background_left;
+	//Background* background_right;
+
+	Background* background;
 
 	Player* player;
 	Player* player2;
 
-	int groundLevel;
+	std::vector<Bullet*> playerBullets;
+	std::vector<Bullet*> player2Bullets;
+
+	
 };
 
 #endif /* SCENE00_H */

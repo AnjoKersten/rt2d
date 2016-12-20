@@ -3,6 +3,7 @@
  *
  * - Copyright 2015 Rik Teerling <rik@onandoffables.com>
  *   - Initial commit
+ *   - <meruiden> scaling of window
  */
 
 #include <rt2d/renderer.h>
@@ -106,6 +107,12 @@ int Renderer::init()
 
 void Renderer::renderScene(Scene* scene)
 {
+	// Since apple scales automatically, this will cause bugs where the viewport gets very small.
+	#ifndef __APPLE__
+		// Set the glViewport to the width and height of the window.
+		glViewport(0, 0, scene->input()->getWindowWidth(), scene->input()->getWindowHeight());
+	#endif
+
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

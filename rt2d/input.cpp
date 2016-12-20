@@ -3,6 +3,7 @@
  *
  * - Copyright 2015 Rik Teerling <rik@onandoffables.com>
  *   - Initial commit
+ *   - <meruiden> scaling of window
  */
 
 #include <iostream>
@@ -11,6 +12,9 @@
 Input::Input()
 {
 	_window = NULL;
+
+	_windowWidth = 0;
+	_windowHeight = 0;
 
 	int i;
 	for(i=0; i<GLFW_KEY_LAST; i++) {
@@ -45,8 +49,14 @@ void Input::updateInput(GLFWwindow* w)
 	for(i=255; i<GLFW_KEY_LAST;i++) {
 		_handleKey(i);
 	}
+	//  window size
+	glfwGetWindowSize(_window, &_windowWidth, &_windowHeight);
 
 	glfwGetCursorPos(_window, &_mouseX, &_mouseY);
+
+	// Fix cursor position if window size is different from the set resolution
+	_mouseX = ((float)SWIDTH / _windowWidth) * _mouseX;
+	_mouseY = ((float)SHEIGHT / _windowHeight) * _mouseY;
 
 	// mouse buttons
 	for(i=0; i<GLFW_MOUSE_BUTTON_LAST;i++) {

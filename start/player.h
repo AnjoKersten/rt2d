@@ -1,17 +1,12 @@
-/**
- * Copyright 2015 Your Name <you@yourhost.com>
- *
- * @file player.h
- *
- * @brief description of MyEntity behavior.
- */
 
 #ifndef PLAYER_H
 #define PLAYER_H
 
 #include <rt2d/entity.h>
 
-/// @brief The MyEntity class is the Entity implementation.
+/// @file player.h
+
+/// @brief The Player class contains the implementation of a player
 class Player : public Entity
 {
 public:
@@ -25,14 +20,14 @@ public:
 	/// @return void
 	virtual void update(float deltaTime);
 
-	void Jump();
-
+	/// @brief velocity is a Vector2
 	Vector2 velocity;
 
 private:
-	Vector2 pos;
-	Vector2 acceleration;
+
+	/// @brief gravity is a force that is applied to the player
 	int gravity;
+
 };
 
 #endif /* PLAYER_H */

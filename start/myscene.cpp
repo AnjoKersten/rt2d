@@ -59,13 +59,13 @@ MyScene::MyScene() : Scene()
 
 	// create an Entity called player2 and set it's sprite
 	player2 = new Player();
-	player2->addSprite("assets/player2.tga", 0.5, 0.5, 0, 0);
+	player2->addSprite("assets/player2_test.tga", 0.5, 0.5, 0, 0);
 
 	// set player2 scale and position
 	player2->scale = Point(2.5f, 2.5f);
 	player2->position = Point2((SWIDTH / 2) - 200, 400);
 
-	// addChild() player2
+	// addChild() player2	
 	this->addChild(player2);
 }
 
@@ -73,11 +73,14 @@ MyScene::MyScene() : Scene()
 MyScene::~MyScene()
 {
 	// deconstruct and delete background
-	
+	this->removeChild(background);
 
 	// deconstruct player's
 	this->removeChild(player);
 	this->removeChild(player2);
+
+	// delete background
+	delete background;
 
 	// delete player's
 	delete player;

@@ -13,6 +13,7 @@
 #define COLOR_H_
 
 #include <algorithm>
+#include <cmath>
 
 /// @brief A 24 bit HSV color.
 ///
@@ -46,17 +47,17 @@ struct HSVColor
 
 /// @brief A 32 bit RGBA color.
 ///
-/// A struct that defines an RGBA Color. Each value is an unsigned char (0-255).
+/// A struct that defines an RGBA Color. Each value is an uint8_t (0-255).
 struct RGBAColor
 {
 	/// @brief The red component of the color
-	unsigned char r = 255;
+	uint8_t r = 255;
 	/// @brief The green component of the color
-	unsigned char g = 255;
+	uint8_t g = 255;
 	/// @brief The blue component of the color
-	unsigned char b = 255;
+	uint8_t b = 255;
 	/// @brief The alpha component of the color
-	unsigned char a = 255;
+	uint8_t a = 255;
 
 	/// @brief constructor
 	RGBAColor() {
@@ -70,7 +71,7 @@ struct RGBAColor
 	/// @param green The green component of the color
 	/// @param blue The blue component of the color
 	/// @param alpha The alpha component of the color
-	RGBAColor(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) {
+	RGBAColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha) {
 		r = red;
 		g = green;
 		b = blue;
@@ -80,7 +81,7 @@ struct RGBAColor
 	/// @param red The red component of the color
 	/// @param green The green component of the color
 	/// @param blue The blue component of the color
-	RGBAColor(unsigned char red, unsigned char green, unsigned char blue) {
+	RGBAColor(uint8_t red, uint8_t green, uint8_t blue) {
 		r = red;
 		g = green;
 		b = blue;
@@ -99,6 +100,18 @@ struct RGBAColor
 	uint32_t asInt() {
 		uint32_t color = (r << 24) + (g << 16) + (b << 8) + (a);
 		return color;
+	}
+	/// @brief == operator overloader
+	/// @param rhs the color to compare against
+	/// @return bool equal or not
+	inline bool operator==(const RGBAColor& rhs) {
+		return ( r == rhs.r && g == rhs.g && b == rhs.b && a == rhs.a );
+	}
+	/// @brief != operator overloader
+	/// @param rhs the color to compare against
+	/// @return bool equal or not
+	inline bool operator!=(const RGBAColor& rhs) {
+		return !(*this == rhs);
 	}
 };
 
@@ -144,9 +157,9 @@ struct Color
 	// http://www.easyrgb.com/index.php?X=MATH&H=21#text21
 	/// @brief HSV to RGBA conversion
 	static RGBAColor HSV2RGBA(HSVColor hsv) {
-		unsigned char R = 0;
-		unsigned char G = 0;
-		unsigned char B = 0;
+		uint8_t R = 0;
+		uint8_t G = 0;
+		uint8_t B = 0;
 		if ( hsv.s == 0 ) { //HSV from 0 to 1
 			R = hsv.v * 255;
 			G = hsv.v * 255;
@@ -182,6 +195,23 @@ struct Color
 		if (hsv.h > 1.0f) { hsv.h -= 1.0f; }
 		if (hsv.h < 0.0f) { hsv.h += 1.0f; }
 		return HSV2RGBA(hsv);
+	}
+
+	/// @brief lerp from color to another color
+	/// @param c1 first RGBAColor
+	/// @param c2 second RGBAColor
+	/// @param amount between 0 and 1
+	/// @brief return RGBAColor lerped color
+	static RGBAColor lerpColor(RGBAColor c1, RGBAColor c2, float amount) {
+		if (amount < 0) { amount = 0; }
+		if (amount > 1) { amount = 1; }
+
+		uint8_t r = floor(c1.r + (c2.r-c1.r)*amount);
+		uint8_t g = floor(c1.g + (c2.g-c1.g)*amount);
+		uint8_t b = floor(c1.b + (c2.b-c1.b)*amount);
+		uint8_t a = floor(c1.a + (c2.a-c1.a)*amount);
+
+		return RGBAColor(r, g, b, a);
 	}
 };
 

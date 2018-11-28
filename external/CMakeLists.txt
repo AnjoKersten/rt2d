@@ -55,6 +55,7 @@ target_link_libraries(GLEW_190
 	${OPENGL_LIBRARY}
 	${EXTRA_LIBS}
 )
+<<<<<<< HEAD
 
 ### RS-232 ###
 
@@ -86,3 +87,5 @@ set(LIB_INSTALL_DIR lib${LIB_SUFFIX})
 # The Box2D library.
 add_subdirectory(Box2D)
 
+=======
+>>>>>>> upstream/master

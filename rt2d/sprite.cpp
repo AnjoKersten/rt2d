@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include <rt2d/config.h>
+#include <rt2d/rt2dconfig.h>
 #include <rt2d/sprite.h>
 
 Sprite::Sprite()
@@ -17,20 +17,27 @@ Sprite::Sprite()
 	_fragmentshader = SPRITEFRAGMENTSHADER;
 	_vertexshader = SPRITEVERTEXSHADER;
 
-	spriteposition = Point2(0.0f, 0.0f); // spritebatch only
-	spriterotation = 0.0f; // spritebatch only
-	spritescale = Point2(1.0f, 1.0f); // spritebatch only
+	spriteposition = Point3(0.0f, 0.0f, 0.0f); // spritebatch only
+	spriterotation = Point3(0.0f, 0.0f, 0.0f); // spritebatch only
+	spritescale = Point3(1.0f, 1.0f, 1.0f); // spritebatch only
+
 	pivot = Point2(0.5f, 0.5f);
 	uvdim = Point2(1.0f, 1.0f);
 	uvoffset = Point2(0.0f, 0.0f);
 	size = Point2(0, 0);
+
+	for (size_t i = 0; i < 8; i++) {
+		customParams[i] = Point3(0.0f, 0.0f, 0.0f);
+	}
+
+	_palette = nullptr;
 
 	_frame = 0;
 
 	_filter = DEFAULTFILTER;
 	_wrap = DEFAULTWRAP;
 
-	_dyntexture = NULL;
+	_dyntexture = nullptr;
 	_dynamic = false;
 
 	_circlemesh = 0; // false
@@ -43,12 +50,27 @@ Sprite::Sprite()
 
 Sprite::~Sprite()
 {
-	//if (_dyntexture != NULL) {
+	//if (_dyntexture != nullptr) {
 	// TODO this leaks the dynamic textures (get rid of !dynamic)
-	if (_dyntexture != NULL && !_dynamic) {
+	if (_dyntexture != nullptr && !_dynamic) {
 		delete _dyntexture;
-		_dyntexture = NULL;
+		_dyntexture = nullptr;
 	}
+
+	if (_palette != nullptr) {
+		delete _palette;
+		_palette = nullptr;
+	}
+}
+
+void Sprite::setPalette(const std::string& filename)
+{
+	if (_palette != nullptr) {
+		delete _palette;
+		_palette = nullptr;
+	}
+	_palette = new Texture();
+	_palette->loadTGAImage(filename, 0, 0, 1); // filename, filter, wrap, dimension
 }
 
 void Sprite::setupSprite(const std::string& filename, float pivotx, float pivoty, float uvwidth, float uvheight)
@@ -97,6 +119,10 @@ void Sprite::setupSprite(const std::string& filename, float pivotx, float pivoty
 void Sprite::setupSpriteByPixelBuffer(PixelBuffer* pixels)
 {
 	std::cout << "Sprite::setupSpriteByPixelBuffer() " <<  std::endl;
+	if (_dyntexture != nullptr) {
+		delete _dyntexture;
+		_dyntexture = nullptr;
+	}
 
 	_filter = pixels->filter;
 	_wrap = pixels->wrap;
@@ -112,6 +138,10 @@ void Sprite::setupSpriteByPixelBuffer(PixelBuffer* pixels)
 void Sprite::setupSpriteTGAPixelBuffer(const std::string& filename, int filter, int wrap)
 {
 	std::cout << "Sprite::setupSpriteByPixelBuffer() " <<  std::endl;
+	if (_dyntexture != nullptr) {
+		delete _dyntexture;
+		_dyntexture = nullptr;
+	}
 
 	_dyntexture = new Texture();
 	_dyntexture->loadTGAImage(filename, filter, wrap);

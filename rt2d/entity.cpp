@@ -18,16 +18,20 @@ Entity::Entity()
 
 	//printf("Entity ctor %d\n", _guid);
 
-	_parent = NULL;
+	_parent = nullptr;
 
-	position = Point2(0.0f, 0.0f);
-	rotation = 0.0f;
-	scale = Point2(1.0f, 1.0f);
+	position = Point3(0.0f, 0.0f, 0.0f);
+	rotation = Point3(0.0f, 0.0f, 0.0f);
+	scale = Point3(1.0f, 1.0f, 1.0f);
 
-	_worldpos = Point2(0.0f, 0.0f);
+	_worldposition = Point3(0.0f, 0.0f, 0.0f);
+	_worldrotation = Point3(0.0f, 0.0f, 0.0f);
+	_worldscale = Point3(1.0f, 1.0f, 1.0f);
 
-	_sprite = NULL;
-	_line = NULL;
+	_sprite = nullptr;
+	_line = nullptr;
+
+	_input = Singleton<Input>::instance();
 }
 
 Entity::~Entity()
@@ -36,11 +40,12 @@ Entity::~Entity()
 	deleteSprite();
 	deleteLine();
 	deleteSpritebatch();
+	deleteLinebatch();
 }
 
 void Entity::addChild(Entity* child)
 {
-	if(child->_parent != NULL) {
+	if(child->_parent != nullptr) {
 		child->_parent->removeChild(child);
 	}
 	child->_parent = this;
@@ -52,6 +57,7 @@ void Entity::removeChild(Entity* child)
 	std::vector< Entity* >::iterator it = _children.begin();
 	while (it != _children.end()) {
 		if ((*it)->_guid == child->_guid) {
+			child->_parent = nullptr;
 			it = _children.erase(it);
 		} else {
 			++it;
@@ -64,20 +70,27 @@ Entity* Entity::getChild(unsigned int i)
 	if (i < _children.size()) {
 		return _children[i];
 	}
-	return NULL;
+	return nullptr;
 }
 
 void Entity::addLine(const std::string& filename)
 {
-	deleteLine();
-	_line = new Line(filename);
+	// loaded from file: this line must be static, add to linebatch only
+	Line* line = new Line(filename);
+	_linebatch.push_back(*line);
 }
 
 void Entity::addLine(Line* line)
 {
-	deleteLine();
-	_line = new Line();
-	*_line = *line;
+	// if dynamic, we want to keep a pointer to it in our _line member
+	if (line->dynamic()) {
+		deleteLine();
+		_line = new Line();
+		*_line = *line;
+	} else {
+		// this line is static, add to linebatch only
+		_linebatch.push_back(*line);
+	}
 }
 
 void Entity::addSprite(Sprite* spr)
@@ -147,7 +160,7 @@ void Entity::addGrid(const std::string& filename, int u, int v, int cols, int ro
 			s->spriteposition.y = y * sizey;
 			float uvwidth = 1.0f / u;
 			float uvheight = 1.0f / v;
-			s->setupSprite(filename, 0.5f, 0.5f, uvwidth, uvheight, DEFAULTFILTER, DEFAULTWRAP); // trilinear filter, mirror repeat
+			s->setupSprite(filename, 0.5f, 0.5f, uvwidth, uvheight, 3, 0); // trilinear filter, repeat
 			_spritebatch.push_back(s);
 		}
 	}

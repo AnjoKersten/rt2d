@@ -12,11 +12,12 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
+#include <sstream>
 #include <string>
 #include <time.h>
 #include <ctime>
 #include <glfw3.h>
-#include "stringutil.h"
+#include "color.h"
 
 /// @brief defines a PixelBuffer
 struct PixelBuffer
@@ -88,6 +89,56 @@ struct PixelBuffer
 	/// @brief destructor
 	~PixelBuffer() { delete[] data; data = 0; /*std::cout << "delete PixelBuffer" << std::endl;*/ }
 
+	/// @brief set a pixel in the buffer to a certain color
+	/// @param x the x coordinate of the pixel
+	/// @param y the y coordinate of the pixel
+	/// @param color RGBAColor of the pixel
+	/// @return void
+	void setPixel(int x, int y, RGBAColor color)
+	{
+		int start = ((y*this->width) + x) * this->bitdepth;
+		if (start > this->width * this->height * this->bitdepth || start < 0) { return; }
+
+		if (this->bitdepth == 1) {
+			int value = (color.r + color.g + color.b) / 3;
+			this->data[start+0] = value;
+		}
+		if (this->bitdepth == 3 || this->bitdepth == 4) {
+			this->data[start+0] = color.r;
+			this->data[start+1] = color.g;
+			this->data[start+2] = color.b;
+		}
+		if (this->bitdepth == 4) {
+			this->data[start+3] = color.a;
+		}
+	}
+
+	/// @brief get the color of a pixel in the buffer
+	/// @param x the x coordinate of the pixel
+	/// @param y the y coordinate of the pixel
+	/// @return color RGBAColor of the pixel
+	RGBAColor getPixel(int x, int y)
+	{
+		RGBAColor color = RGBAColor(0,0,0,255);
+		int start = ((y*this->width) + x) * this->bitdepth;
+		if (start > this->width * this->height * this->bitdepth || start < 0) { return color; }
+
+		if (this->bitdepth == 1) {
+			color.r = this->data[start+0];
+			color.g = this->data[start+0];
+			color.b = this->data[start+0];
+		}
+		if (this->bitdepth == 3 || this->bitdepth == 4) {
+			color.r = this->data[start+0];
+			color.g = this->data[start+1];
+			color.b = this->data[start+2];
+		}
+		if (this->bitdepth == 4) {
+			color.a = this->data[start+3];
+		}
+		return color;
+	}
+
 	/// @brief destroy the pixel data
 	void destroy() { delete[] data; data = 0; /*std::cout << "destroy PixelBuffer" << std::endl;*/ }
 };
@@ -121,12 +172,12 @@ public:
 	/// @param filename the path to the image
 	/// @param filter the filter
 	/// @param wrap the wrap
+	/// @param dim if this is a 1D palette or a 2D texture (default)
 	/// @return GLuint _texture, 0 if failed
-	GLuint loadTGAImage(const std::string& filename, int filter, int wrap);
-	/// @brief write an image to file (tga only)
-	/// @param pixels the PixelBuffer to write
+	GLuint loadTGAImage(const std::string& filename, int filter, int wrap, int dim = 2);
+	/// @brief write _pixelbuffer as image to file (tga only)
 	/// @return int 0 if failed
-	int writeTGAImage(PixelBuffer* pixels);
+	int writeTGAImage();
 	/// @brief create a width x height white PixelBuffer & GLpixeldata
 	/// @param width the width of the white Texture
 	/// @param height the height of the white Texture
@@ -134,8 +185,9 @@ public:
 	GLuint createWhitePixels(int width, int height);
 	/// @brief create a Texture from a PixelBuffer
 	/// @param pixels a PixelBuffer pointer
+	/// @param dim if this is a 1D palette or a 2D texture (default)
 	/// @return GLuint _texture, 0 if failed
-	void createFromBuffer(PixelBuffer* pixels);
+	void createFromBuffer(PixelBuffer* pixels, int dim = 2);
 
 	/// @brief get the warranty bit
 	/// @return unsigned char _warrantybit
@@ -155,14 +207,14 @@ private:
 	GLuint _gltexture[1];
 
 	unsigned char _warrantybit; ///< @brief flipped if not a power of 2
-	PixelBuffer* _pixelbuffer; ///< @brief pixelbuffer pointer. Will not be used if NULL.
+	PixelBuffer* _pixelbuffer; ///< @brief pixelbuffer pointer. Will not be used if nullptr.
 
 	/// @brief delete the PixelBuffer of this Entity.
 	/// @return void
 	void deletePixelBuffer() {
-		if (_pixelbuffer != NULL) {
+		if (_pixelbuffer != nullptr) {
 			delete _pixelbuffer;
-			_pixelbuffer = NULL;
+			_pixelbuffer = nullptr;
 		}
 	};
 };

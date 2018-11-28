@@ -21,12 +21,16 @@
 #include <algorithm>
 
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
 
-#include <rt2d/config.h>
+#include <rt2d/rt2dconfig.h>
 #include <rt2d/timer.h>
 #include <rt2d/sprite.h>
 #include <rt2d/line.h>
 #include <rt2d/vectorx.h>
+#include <rt2d/input.h>
+#include <rt2d/singleton.h>
 
 /// @brief The Entity class is the Base class for the elements in your Scene.
 class Entity
@@ -41,9 +45,9 @@ public:
 	virtual void update(float deltaTime) = 0;
 
 	// transform
-	Point2 position; /**< @brief The position of the Entity */
-	float rotation; /**< @brief The rotation of the Entity */
-	Point2 scale; /**< @brief The scale of the Entity */
+	Point3 position; /**< @brief The position of the Entity */
+	Point3 rotation; /**< @brief The rotation of the Entity */
+	Point3 scale; /**< @brief The scale of the Entity */
 
 	// data structure
 	/// @brief add an Entity as a child of this Entity.
@@ -126,7 +130,16 @@ public:
 	// line
 	/// @brief get the Line from this Entity.
 	/// @return Line* _line
-	Line* line() { return _line; };
+	Line* line() {
+		if (_line != nullptr) {
+			return _line;
+		} else {
+			if (_linebatch.size() > 0) {
+				return &_linebatch[0];
+			}
+		}
+		return nullptr;
+	};
 	/// @brief add a Line to this Entity by Line*.
 	/// @param line A pointer to a Line.
 	/// @return void
@@ -140,6 +153,9 @@ public:
 	/// @brief get the spritebatch of this Entity.
 	/// @return std::vector<Sprite*>& _spritebatch
 	std::vector<Sprite*>& spritebatch() { return _spritebatch; };
+	/// @brief get the linebatch of this Entity.
+	/// @return std::vector<Line>& _linebatch
+	std::vector<Line>& linebatch() { return _linebatch; };
 
 	/// @brief get the guid of this Entity.
 	/// @return int _guid
@@ -147,16 +163,31 @@ public:
 	/// @brief get the parent of this Entity.
 	/// @return Entity* _parent
 	Entity* parent() { return _parent; };
+
 	/// @brief get the world position of this Entity.
-	/// @return Point2 _worldpos
-	Point2 worldpos() { return _worldpos; };
+	/// @return Point3 _worldposition
+	Point3 worldposition() { return _worldposition; };
+	/// @brief get the world rotation of this Entity.
+	/// @return Point3 _worldrotation
+	Point3 worldrotation() { return _worldrotation; };
+	/// @brief get the world scale of this Entity.
+	/// @return Point3 _worldscale
+	Point3 worldscale() { return _worldscale; };
+
+	/// @brief get a pointer to the Input
+	/// @return Input* a pointer to the Input
+	Input* input() { return _input; };
 
 	friend class Renderer;
 
 protected:
-	// updated world position after all transforms
-	Point2 _worldpos; /**< @brief The position of the Entity in the real world */
+	// updated world transforms
+	Point3 _worldposition; /**< @brief The position of the Entity in the real world */
+	Point3 _worldrotation; /**< @brief The rotation of the Entity in the real world */
+	Point3 _worldscale; /**< @brief The scale of the Entity in the real world */
+
 	std::vector<Sprite*> _spritebatch; ///< @brief The _spritebatch of this Entity
+	std::vector<Line> _linebatch; ///< @brief The _linebatch of this Entity
 
 private:
 	// identity
@@ -171,21 +202,28 @@ private:
 	Sprite* _sprite; ///< @brief The _sprite of this Entity
 	Line* _line; ///< @brief The _line of this Entity
 
+	Input* _input; ///< @brief the Input instance
+
 	/// @brief delete the Sprite of this Entity.
 	/// @return void
 	void deleteSprite() {
-		if (_sprite != NULL) {
+		if (_sprite != nullptr) {
 			delete _sprite;
-			_sprite = NULL;
+			_sprite = nullptr;
 		}
 	};
 	/// @brief delete the Line of this Entity.
 	/// @return void
 	void deleteLine() {
-		if (_line != NULL) {
+		if (_line != nullptr) {
 			delete _line;
-			_line = NULL;
+			_line = nullptr;
 		}
+	};
+	/// @brief delete the Linebatch of this Entity.
+	/// @return void
+	void deleteLinebatch() {
+		_linebatch.clear();
 	};
 	/// @brief delete the Spritebatch of this Entity.
 	/// @return void

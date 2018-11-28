@@ -25,7 +25,7 @@ Texture::Texture()
 	_depth = 3;
 
 	_gltexture[0] = 0;
-	_pixelbuffer = NULL;
+	_pixelbuffer = nullptr;
 
 	_warrantybit = 1;
 
@@ -45,18 +45,16 @@ GLuint Texture::createWhitePixels(int width, int height)
 {
 	std::cout << "Creating PixelBuffer: white " << width << "x" << height << std::endl;
 
-	PixelBuffer* pixels = new PixelBuffer(width, height, 3, 0, 0);
+	PixelBuffer pixels = PixelBuffer(width, height, 3, 0, 0);
 
 	// Generate the OpenGL Texture
-	createFromBuffer(pixels);
-
-	delete pixels;
+	createFromBuffer(&pixels, 2);
 
 	return _gltexture[0];
 }
 
 // http://paulbourke.net/dataformats/tga/
-GLuint Texture::loadTGAImage(const std::string& filename, int filter, int wrap)
+GLuint Texture::loadTGAImage(const std::string& filename, int filter, int wrap, int dim)
 {
 	std::cout << "Loading TGA: " << filename << std::endl;
 
@@ -85,102 +83,96 @@ GLuint Texture::loadTGAImage(const std::string& filename, int filter, int wrap)
 		return false;
 	}
 
-	PixelBuffer* pixels = new PixelBuffer();
+	PixelBuffer pixels = PixelBuffer();
 
-	pixels->width = info[0] + info[1] * 256;
-	pixels->height = info[2] + info[3] * 256;
-	pixels->bitdepth = info[4] / 8;
-	pixels->filter = filter;
-	pixels->wrap = wrap;
+	pixels.width = info[0] + info[1] * 256;
+	pixels.height = info[2] + info[3] * 256;
+	pixels.bitdepth = info[4] / 8;
+	pixels.filter = filter;
+	pixels.wrap = wrap;
 
-	if (pixels->bitdepth != 1 && pixels->bitdepth != 3 && pixels->bitdepth != 4) {
+	if (pixels.bitdepth != 1 && pixels.bitdepth != 3 && pixels.bitdepth != 4) {
 		std::cout << "bytecount not 1, 3 or 4" << std::endl;
 		fclose(file);
 		return false;
 	}
 
-	long file_size = pixels->width * pixels->height * pixels->bitdepth;
+	long file_size = pixels.width * pixels.height * pixels.bitdepth;
 
 	//allocate memory for image data
-	pixels->data = new unsigned char[file_size];
+	pixels.data = new unsigned char[file_size];
 
 	//read in image data
-	s = fread(pixels->data, sizeof(unsigned char), file_size, file);
+	s = fread(pixels.data, sizeof(unsigned char), file_size, file);
 	if (s == 0) return false;
 
 	//close file
 	fclose(file);
 
 	// BGR(A) to RGB(A)
-	if (pixels->bitdepth == 3 || pixels->bitdepth == 4) {
-		BGR2RGB(pixels);
+	if (pixels.bitdepth == 3 || pixels.bitdepth == 4) {
+		BGR2RGB(&pixels);
 	}
 
 	// =================================================================
 	// Check if the image's width and height is a power of 2. No biggie, we can handle it.
-	if ((pixels->width & (pixels->width - 1)) != 0) {
+	if ((pixels.width & (pixels.width - 1)) != 0) {
 		_warrantybit = 0;
 		//std::cout << "warning: " << filename << "’s width is not a power of 2" << std::endl;
 	}
-	if ((pixels->height & (pixels->height - 1)) != 0) {
+	if ((pixels.height & (pixels.height - 1)) != 0) {
 		_warrantybit = 0;
 		//std::cout << "warning: " << filename << "’s height is not a power of 2" << std::endl;
 	}
-	if (pixels->width != pixels->height) {
+	if (pixels.width != pixels.height) {
 		//_warrantybit = 0;
 		//std::cout << "warning: " << filename << " is not square" << std::endl;
 	}
 	// =================================================================
 
 	// Generate the OpenGL Texture
-	createFromBuffer(pixels);
-
-	delete pixels;
+	createFromBuffer(&pixels, dim);
 
 	return _gltexture[0];
 }
 
 // http://paulbourke.net/dataformats/tga/
-int Texture::writeTGAImage(PixelBuffer* pixels)
+int Texture::writeTGAImage()
 {
 	static int id = 0;
-	time_t t = time(NULL);
+	time_t t = time(nullptr);
 
-	std::string filename = "rt2d_";
-	filename.append(rt2d::to_string(t));
-	filename.append("_");
-
-	filename.append(rt2d::to_string(id));
+	std::stringstream filename;
+	filename << "rt2d_" << t << "_" << id << ".tga";
 	id++;
-	filename.append(".tga");
 
-	FILE *fp = fopen(filename.c_str(), "w");
-	if (fp == NULL) {
+	FILE *fp = fopen(filename.str().c_str(), "w");
+	if (fp == nullptr) {
 		return 0;
 	}
 
 	// The image header
 	unsigned char header[ 18 ] = { 0 };
 	header[ 2 ] = 2; // true color
-	header[ 12 ] = pixels->width & 0xFF;
-	header[ 13 ] = (pixels->width >> 8) & 0xFF;
-	header[ 14 ] = pixels->height & 0xFF;
-	header[ 15 ] = (pixels->height >> 8) & 0xFF;
-	header[ 16 ] = pixels->bitdepth * 8;
+	header[ 12 ] = _pixelbuffer->width & 0xFF;
+	header[ 13 ] = (_pixelbuffer->width >> 8) & 0xFF;
+	header[ 14 ] = _pixelbuffer->height & 0xFF;
+	header[ 15 ] = (_pixelbuffer->height >> 8) & 0xFF;
+	header[ 16 ] = _pixelbuffer->bitdepth * 8;
 
 	fwrite((const char*)&header, 1, sizeof(header), fp);
 
 	// The image data is stored bottom-to-top, left-to-right
 	unsigned int counter = 0;
-	for (int y = pixels->height-1; y >= 0; y--) {
-		for (int x = 0; x < pixels->width; x++) {
-			putc((int)(pixels->data[counter+2] & 0xFF), fp); // b
-			putc((int)(pixels->data[counter+1] & 0xFF), fp); // g
-			putc((int)(pixels->data[counter+0] & 0xFF), fp); // r
-			if (pixels->bitdepth == 4) {
-				putc((int)(pixels->data[counter+3] & 0xFF), fp);
+	for (int y = _pixelbuffer->height-1; y >= 0; y--) {
+		for (int x = 0; x < _pixelbuffer->width; x++) {
+			putc((int)(_pixelbuffer->data[counter+2] & 0xFF), fp); // b
+			putc((int)(_pixelbuffer->data[counter+1] & 0xFF), fp); // g
+			putc((int)(_pixelbuffer->data[counter+0] & 0xFF), fp); // r
+			if (_pixelbuffer->bitdepth == 4) {
+				putc((int)(_pixelbuffer->data[counter+3] & 0xFF), fp);
 			}
-			counter += pixels->bitdepth;
+			counter += _pixelbuffer->bitdepth;
 		}
 	}
 /*
@@ -213,7 +205,7 @@ void Texture::BGR2RGB(PixelBuffer* pixels)
 	}
 }
 
-void Texture::createFromBuffer(PixelBuffer* pixels)
+void Texture::createFromBuffer(PixelBuffer* pixels, int dim)
 {
 	//allocate memory and copy image data to pixelBuffer
 	deletePixelBuffer();
@@ -248,57 +240,76 @@ void Texture::createFromBuffer(PixelBuffer* pixels)
 	// generate a number of texturenames (just 1 for now)
 	glGenTextures(1, this->_gltexture);
 
-	// setup first texture (the only one in this case)
-	// if you created more, use this->_gltexture[x], where x is the id of the texturename.
-	glBindTexture(GL_TEXTURE_2D, this->_gltexture[0]);
+	// 2D Texture (diffuse)
+	if (dim == 2) {
+		// setup first texture (the only one in this case)
+		// if you created more, use this->_gltexture[x], where x is the id of the texturename.
+		glBindTexture(GL_TEXTURE_2D, this->_gltexture[0]);
+		//glEnable(GL_TEXTURE_2D);
 
-	// handle transparency
-	if (this->_depth == 4) {
-		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_BLEND);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->_width, this->_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels->data);
-	}
-	if (this->_depth == 3) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->_width, this->_height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels->data);
-	}
-	if (this->_depth == 1) {
-		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_BLEND);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->_width, this->_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, _pixelbuffer->data);
+		// handle transparency
+		if (this->_depth == 4) {
+			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+			glEnable(GL_BLEND);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->_width, this->_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels->data);
+		}
+		if (this->_depth == 3) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->_width, this->_height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels->data);
+		}
+		if (this->_depth == 1) {
+			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+			glEnable(GL_BLEND);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->_width, this->_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, _pixelbuffer->data);
+		}
+
+		// 0 = GL_REPEAT
+		// 1 = GL_MIRRORED_REPEAT
+		// 2 = GL_CLAMP_TO_EDGE
+		if (pixels->wrap == 0) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		} else if (pixels->wrap == 1) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+		} else if (pixels->wrap == 2) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		}
+
+		// filter the Texture
+		if (pixels->filter == 0) {
+			// No filtering.
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		} else if (pixels->filter == 1) {
+			// Linear filtering.
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		} else if (pixels->filter == 2) {
+			// Bilinear filtering.
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+			glGenerateMipmap(GL_TEXTURE_2D);
+		} else if (pixels->filter == 3) {
+			// Trilinear filtering.
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}
 	}
 
-	// 0 = GL_REPEAT
-	// 1 = GL_MIRRORED_REPEAT
-	// 2 = GL_CLAMP_TO_EDGE
-	if (pixels->wrap == 0) {
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	} else if (pixels->wrap == 1) {
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-	} else if (pixels->wrap == 2) {
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	// 1D texture (palette)
+	if (dim == 1) {
+		glBindTexture(GL_TEXTURE_1D, this->_gltexture[0]);
+
+		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+
+		// this assumes an RGB palette TODO fix
+		glTexImage1D(GL_TEXTURE_1D, 0, 3, pixels->width, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels->data);
+
+		//glEnable(GL_TEXTURE_1D);
 	}
 
-	// filter the Texture
-	if (pixels->filter == 0) {
-		// No filtering.
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	} else if (pixels->filter == 1) {
-		// Linear filtering.
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	} else if (pixels->filter == 2) {
-		// Bilinear filtering.
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	} else if (pixels->filter == 3) {
-		// Trilinear filtering.
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
 }

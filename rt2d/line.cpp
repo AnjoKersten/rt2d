@@ -37,18 +37,19 @@ Line::~Line()
 	_points.clear();
 }
 
-void Line::addPoint(float x, float y)
+void Line::addPoint(float x, float y, float z)
 {
-	glm::vec3 pnt(x, y, 0.0f);
+	glm::vec3 pnt(x, y, z);
 	_points.push_back(pnt);
 }
 
 
-void Line::editPoint(unsigned int id, float x, float y)
+void Line::editPoint(unsigned int id, float x, float y, float z)
 {
 	if (id < _points.size()) {
 		_points[id].x = x;
 		_points[id].y = y;
+		_points[id].z = z;
 	}
 }
 
@@ -70,10 +71,25 @@ void Line::createCircle(int radius, int segments)
 	_filename = linename;
 }
 
+void Line::createBox(int hw, int hh)
+{
+	this->addPoint(-hw, -hh);
+	this->addPoint( hw, -hh);
+	this->addPoint( hw,  hh);
+	this->addPoint(-hw,  hh);
+	this->closed(true);
+
+	char buf[24]; // should be big enough: "box_hw999_hh999"
+	sprintf(buf, "box_hw%d_hh%d", hw, hh);
+	std::string linename(buf);
+
+	_filename = linename;
+}
+
 bool Line::loadLineFile(const std::string& filename)
 {
 	FILE * file = fopen(filename.c_str(), "r");
-	if( file == NULL ){
+	if( file == nullptr ){
 		printf("Can't open %s\n", filename.c_str());
 		return false;
 	}

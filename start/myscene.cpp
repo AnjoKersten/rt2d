@@ -118,6 +118,7 @@ void MyScene::update(float deltaTime)
 	// ###############################################################
 	// PLAYER 1 //
 	// ###############################################################
+<<<<<<< HEAD
 
 	// UP Arrow key let's the player JUMP
 	if (input()->getKey(GLFW_KEY_UP)) {
@@ -145,6 +146,20 @@ void MyScene::update(float deltaTime)
 	// RCTRL key shoots bullet from player
 	if (input()->getKeyDown(GLFW_KEY_RIGHT_CONTROL)) {
 		PlayerFireBullet();
+=======
+	if (input()->getKeyUp(KeyCode::Escape)) {
+		this->stop();
+	}
+
+	// ###############################################################
+	// Spacebar scales myentity
+	// ###############################################################
+	if (input()->getKeyDown(KeyCode::Space)) {
+		myentity->scale = Point(0.5f, 0.5f);
+	}
+	if (input()->getKeyUp(KeyCode::Space)) {
+		myentity->scale = Point(1.0f, 1.0f);
+>>>>>>> upstream/master
 	}
 
 	// ###############################################################

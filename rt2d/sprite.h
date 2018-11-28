@@ -55,15 +55,24 @@ public:
 	/// @return int _frame
 	int frame() { return _frame; };
 
-	Point2 spriteposition; ///< @brief Sprite position Point_t of the Sprite (only for Spritebatches)
-	float spriterotation; ///< @brief Sprite rotation of the Sprite (only for Spritebatches)
-	Point2 spritescale; ///< @brief Sprite scale Point_t of the Sprite (only for Spritebatches)
+	/// @brief get the width (of the texture)
+	/// @return int size.x
+	int width() { return (int) this->size.x; };
+	/// @brief get the height (of the texture)
+	/// @return int size.y
+	int height() { return (int) this->size.y; };
+
+	Point3 spriteposition; ///< @brief Sprite position Point_t of the Sprite (only for Spritebatches)
+	Point3 spriterotation; ///< @brief Sprite rotation of the Sprite (only for Spritebatches)
+	Point3 spritescale; ///< @brief Sprite scale Point_t of the Sprite (only for Spritebatches)
 
 	Point2 pivot; ///< @brief Pivot Point_t of the Sprite
 	Point2 uvdim; ///< @brief UVdim Point_t of the Sprite (uvwidth, uvheight. The size of the part we need to render)
 	Point2 uvoffset; ///< @brief UVoffset Point_t of the Sprite (which part do we need to render)
 	Point2 size; ///< @brief size Point_t of the Sprite (width and height of the Sprite)
 	RGBAColor color; ///< @brief blend Color of the Sprite
+
+	Point3 customParams[8]; ///< @brief custom Params that are sent to the shader
 
 	/// @brief prepare Sprite for creation by ResourceManager
 	/// @param filename path to the image.tga
@@ -106,6 +115,14 @@ public:
 	/// @param wrap wrapping of the Sprite Texture
 	/// @return void
 	void setupSpriteTGAPixelBuffer(const std::string& filename, int filter, int wrap);
+
+	/// @brief set the palette sampler1D
+	/// @param filename path to the image.tga
+	/// @return void
+	void setPalette(const std::string& filename);
+	/// @brief get the palette sampler1D
+	/// @return Texture* _palette
+	Texture* palette() { return _palette; };
 
 	/// @brief get the dynamic texture
 	/// @return Texture* _dyntexture
@@ -156,6 +173,8 @@ private:
 
 	std::string _fragmentshader; ///< @brief fragmentshader (path to the file)
 	std::string _vertexshader; ///< @brief vertexshader (path to the file)
+
+	Texture* _palette; ///< @brief the palette
 
 	Texture* _dyntexture; ///< @brief the dynamic texture
 	bool _dynamic; ///< @brief dynamic or not
